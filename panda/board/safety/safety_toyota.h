@@ -51,9 +51,7 @@ const int TOYOTA_GAS_INTERCEPTOR_THRSLD = 805;
   TOYOTA_COMMON_TX_MSGS                                                                                                                     \
   {0x283, 0, 7}, {0x2E6, 0, 8}, {0x2E7, 0, 8}, {0x33E, 0, 7}, {0x344, 0, 8}, {0x365, 0, 7}, {0x366, 0, 7}, {0x4CB, 0, 8},  /* DSU bus 0 */  \
   {0x128, 1, 6}, {0x141, 1, 4}, {0x160, 1, 8}, {0x161, 1, 7}, {0x470, 1, 4},  /* DSU bus 1 */                                               \
-  {0x1D3, 0, 8}, {0x750, 0, 8},                                                                                                             \
-  {0x411, 0, 8},  /* PCS_HUD */                                                                                                             \
-  {0x750, 0, 8},  /* radar diagnostic address */                                                                                            \
+  {0x2E4, 0, 5}, {0x191, 0, 8}, {0x411, 0, 8}, {0x412, 0, 8}, {0x343, 0, 8}, {0x1D2, 0, 8},  /* LKAS + ACC */                               \
 
 const CanMsg TOYOTA_TX_MSGS[] = {
   TOYOTA_COMMON_TX_MSGS
@@ -72,7 +70,6 @@ const CanMsg TOYOTA_INTERCEPTOR_TX_MSGS[] = {
   {.msg = {{ 0xaa, 0, 8, .check_checksum = false, .frequency = 83U}, { 0 }, { 0 }}},                        \
   {.msg = {{0x260, 0, 8, .check_checksum = true, .quality_flag = (lta), .frequency = 50U}, { 0 }, { 0 }}},  \
   {.msg = {{0x1D2, 0, 8, .check_checksum = true, .frequency = 33U}, { 0 }, { 0 }}},                         \
-  {.msg = {{0x1D3, 0, 8, .check_checksum = true, .frequency = 33U}, { 0 }, { 0 }}},                         \
   {.msg = {{0x224, 0, 8, .check_checksum = false, .frequency = 40U},                                        \
            {0x226, 0, 8, .check_checksum = false, .frequency = 40U}, { 0 }}},                               \
 
@@ -177,9 +174,6 @@ static void toyota_rx_hook(const CANPacket_t *to_push) {
         angle_meas_new = CLAMP(to_signed(angle_meas_new, 16), -TOYOTA_LTA_MAX_ANGLE, TOYOTA_LTA_MAX_ANGLE);
         update_sample(&angle_meas, angle_meas_new);
       }
-    }
-    if (addr == 0x1D3) {
-      acc_main_on = GET_BIT(to_push, 15U);
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
