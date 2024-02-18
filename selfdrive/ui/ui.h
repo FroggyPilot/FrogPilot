@@ -182,6 +182,7 @@ typedef struct UIScene {
   bool blind_spot_left;
   bool blind_spot_path;
   bool blind_spot_right;
+  bool brake_pressed;
   bool compass;
   bool conditional_experimental;
   bool disable_smoothing_mtsc;
@@ -193,6 +194,7 @@ typedef struct UIScene {
   bool fahrenheit;
   bool fps_counter;
   bool full_map;
+  bool gas_pressed;
   bool hide_speed;
   bool hide_speed_ui;
   bool lead_info;
@@ -200,15 +202,18 @@ typedef struct UIScene {
   bool model_ui;
   bool mute_dm;
   bool numerical_temp;
+  bool pedals_on_ui;
   bool reverse_cruise;
   bool reverse_cruise_ui;
   bool road_name_ui;
   bool show_driver_camera;
+  bool standstill;
   bool turn_signal_left;
   bool turn_signal_right;
   bool unlimited_road_ui_length;
   bool use_si;
 
+  float acceleration;
   float adjusted_cruise;
   float lane_line_width;
   float lane_width_left;
