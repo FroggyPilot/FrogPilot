@@ -142,9 +142,20 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : ListWidget(parent) {
     updateLabels();
   });
 
-  QObject::connect(uiState(), &UIState::uiUpdate, this, &SoftwarePanel::automaticUpdate);
+  QObject::connect(uiState(), &UIState::uiUpdate, this, &SoftwarePanel::updateState);
 
   updateLabels();
+}
+
+void SoftwarePanel::updateState() {
+  static bool previousIsParked = isParked;
+  isParked = (*uiState()->sm)["carState"].getCarState().getGearShifter() == cereal::CarState::GearShifter::PARK;
+
+  if (isParked != previousIsParked) {
+    updateLabels();
+  }
+
+  automaticUpdate();
 }
 
 void SoftwarePanel::showEvent(QShowEvent *event) {
@@ -166,8 +177,8 @@ void SoftwarePanel::updateLabels() {
   }
 
   // updater only runs offroad
-  onroadLbl->setVisible(is_onroad);
-  downloadBtn->setVisible(!is_onroad);
+  onroadLbl->setVisible(is_onroad && !isParked);
+  downloadBtn->setVisible(!is_onroad || isParked);
 
   // download update
   QString updater_state = QString::fromStdString(params.get("UpdaterState"));
@@ -199,7 +210,7 @@ void SoftwarePanel::updateLabels() {
   versionLbl->setText(QString::fromStdString(params.get("UpdaterCurrentDescription")));
   versionLbl->setDescription(QString::fromStdString(params.get("UpdaterCurrentReleaseNotes")));
 
-  installBtn->setVisible(!is_onroad && params.getBool("UpdateAvailable"));
+  installBtn->setVisible((!is_onroad || isParked) && params.getBool("UpdateAvailable"));
   installBtn->setValue(QString::fromStdString(params.get("UpdaterNewDescription")));
   installBtn->setDescription(QString::fromStdString(params.get("UpdaterNewReleaseNotes")));
 
