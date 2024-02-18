@@ -617,6 +617,10 @@ class Controls:
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled
 
+    # Update Experimental Mode
+    if self.frogpilot_variables.conditional_experimental_mode:
+      self.experimental_mode = frogpilot_plan.conditionalExperimental
+
     # Gear Check
     self.driving_gear = CS.gearShifter not in (GearShifter.neutral, GearShifter.park, GearShifter.reverse, GearShifter.unknown)
 
@@ -924,7 +928,11 @@ class Controls:
   def params_thread(self, evt):
     while not evt.is_set():
       self.is_metric = self.params.get_bool("IsMetric")
-      self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
+      if self.CP.openpilotLongitudinalControl:
+         if not self.frogpilot_variables.conditional_experimental_mode:
+           self.experimental_mode = self.params.get_bool("ExperimentalMode")
+      else:
+        self.experimental_mode = False
       if self.CP.notCar:
         self.joystick_mode = self.params.get_bool("JoystickDebugMode")
       time.sleep(0.1)
@@ -946,6 +954,8 @@ class Controls:
       t.join()
 
   def update_frogpilot_params(self):
+    self.frogpilot_variables.conditional_experimental_mode = self.params.get_bool("ConditionalExperimental")
+
     custom_alerts = self.params.get_bool("CustomAlerts")
 
     lateral_tune = self.params.get_bool("LateralTune")
