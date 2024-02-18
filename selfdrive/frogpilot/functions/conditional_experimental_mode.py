@@ -62,7 +62,7 @@ class ConditionalExperimentalMode:
     self.slow_lead_gmac = GenericMovingAverageCalculator()
     self.slowing_down_gmac = GenericMovingAverageCalculator()
 
-  def update(self, carState, enabled, frogpilotNavigation, modelData, mpc, radarState, road_curvature, v_ego):
+  def update(self, carState, enabled, frogpilotNavigation, modelData, mpc, radarState, road_curvature, stopping_distance, v_ego):
     # Set the value of "overridden"
     if self.experimental_mode_via_press:
       overridden = self.params_memory.get_int("CEStatus")
@@ -83,7 +83,7 @@ class ConditionalExperimentalMode:
       self.params_memory.put_int("CEStatus", self.status_value)
       self.previous_status_value = self.status_value
 
-    self.update_conditions(modelData, mpc, radarState, road_curvature, v_ego)
+    self.update_conditions(modelData, mpc, radarState, road_curvature, stopping_distance, v_ego)
 
   # Check conditions for the appropriate state of Experimental Mode
   def check_conditions(self, carState, frogpilotNavigation, modelData, v_ego):
@@ -127,7 +127,7 @@ class ConditionalExperimentalMode:
 
     return False
 
-  def update_conditions(self, modelData, mpc, radarState, road_curvature, v_ego):
+  def update_conditions(self, modelData, mpc, radarState, road_curvature, stopping_distance, v_ego):
     v_lead = radarState.leadOne.vLead
 
     self.lead_detection(radarState)
@@ -135,7 +135,7 @@ class ConditionalExperimentalMode:
     self.slow_lead(mpc, radarState, v_ego, v_lead)
     self.stop_sign_and_light(modelData, v_ego)
     self.v_ego_slowing_down(v_ego)
-    self.v_lead_slowing_down(v_lead)
+    self.v_lead_slowing_down(radarState, stopping_distance, v_lead)
 
   # Lead detection
   def lead_detection(self, radarState):
@@ -147,9 +147,9 @@ class ConditionalExperimentalMode:
     self.slowing_down = self.slowing_down_gmac.get_moving_average() >= PROBABILITY
     self.previous_v_ego = v_ego
 
-  def v_lead_slowing_down(self, v_lead):
+  def v_lead_slowing_down(self, radarState, stopping_distance, v_lead):
     if self.lead_detected:
-      self.lead_slowing_down_gmac.add_data(v_lead < self.previous_v_lead or v_lead <= 0)
+      self.lead_slowing_down_gmac.add_data(v_lead < self.previous_v_lead or v_lead <= 0 or radarState.leadOne.dRel - 1 <= stopping_distance)
       self.lead_slowing_down = self.lead_slowing_down_gmac.get_moving_average() >= PROBABILITY
       self.previous_v_lead = v_lead
     else:
