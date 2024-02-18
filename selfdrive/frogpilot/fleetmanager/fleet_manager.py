@@ -5,7 +5,7 @@ import secrets
 import threading
 import time
 
-from flask import Flask, render_template, Response, request, send_from_directory, session, redirect, url_for
+from flask import Flask, jsonify, render_template, Response, request, send_from_directory, session, redirect, url_for
 import requests
 from requests.exceptions import ConnectionError
 from openpilot.common.realtime import set_core_affinity
@@ -271,6 +271,14 @@ def find_navicon(file_name):
   directory = "/data/openpilot/selfdrive/assets/navigation/"
   return send_from_directory(directory, file_name, as_attachment=True)
 
+@app.route("/tools", methods=['GET'])
+def tools_route():
+  return render_template("tools.html")
+
+@app.route("/get_toggle_values", methods=['GET'])
+def toggle_values_route():
+  toggle_values = fleet.get_all_toggle_values()
+  return jsonify(toggle_values)
 
 def main():
   try:

@@ -1,10 +1,14 @@
+import json
+import math
 import os
+import requests
 import subprocess
 # otisserv conversion
 from common.params import Params
 from flask import render_template, request, session
 from functools import wraps
 from pathlib import Path
+
 from openpilot.system.hardware import PC
 from openpilot.system.hardware.hw import Paths
 from openpilot.system.loggerd.uploader import listdir_by_creation
@@ -14,9 +18,6 @@ from openpilot.system.loggerd.xattr_cache import getxattr
 
 # otisserv conversion
 from urllib.parse import parse_qs, quote
-import json
-import requests
-import math
 
 pi = 3.1415926535897932384626
 x_pi = 3.14159265358979324 * 3000.0 / 180.0
@@ -391,3 +392,32 @@ def transform_lng(lng, lat):
   ret += (20.0 * math.sin(lng * pi) + 40.0 * math.sin(lng / 3.0 * pi)) * 2.0 / 3.0
   ret += (150.0 * math.sin(lng / 12.0 * pi) + 300.0 * math.sin(lng / 30.0 * pi)) * 2.0 / 3.0
   return ret
+
+def get_all_toggle_values():
+  all_keys = [
+    "AdjustablePersonalities", "PersonalitiesViaWheel", "PersonalitiesViaScreen", "AlwaysOnLateral", "AlwaysOnLateralMain",
+    "ConditionalExperimental", "CESpeed", "CESpeedLead", "CECurves", "CECurvesLead", "CENavigation", "CENavigationIntersections",
+    "CENavigationLead", "CENavigationTurns", "CESlowerLead", "CEStopLights", "CEStopLightsLead", "CESignal", "CustomPersonalities",
+    "AggressiveFollow", "AggressiveJerk", "StandardFollow", "StandardJerk", "RelaxedFollow", "RelaxedJerk", "DeviceShutdown",
+    "ExperimentalModeActivation", "ExperimentalModeViaDistance", "ExperimentalModeViaLKAS", "ExperimentalModeViaScreen", "FireTheBabysitter",
+    "NoLogging", "MuteDM", "MuteDoor", "MuteSeatbelt", "MuteOverheated", "OfflineMode", "LateralTune", "ForceAutoTune", "NNFF", "SteerRatio",
+    "UseLateralJerk", "LongitudinalTune", "AccelerationProfile", "DecelerationProfile", "AggressiveAcceleration", "StoppingDistance", "SmoothBraking",
+    "Model", "MTSCEnabled", "DisableMTSCSmoothing", "MTSCAggressiveness", "MTSCCurvatureCheck", "MTSCLimit", "NudgelessLaneChange", "LaneChangeTime",
+    "LaneDetection", "LaneDetectionWidth", "OneLaneChange", "QOLControls", "DisableOnroadUploads", "HigherBitrate", "NavChill", "PauseLateralOnSignal",
+    "ReverseCruise", "ReverseCruiseUI", "SetSpeedLimit", "SetSpeedOffset",  "SpeedLimitController", "Offset1", "Offset2", "Offset3", "Offset4",
+    "SLCConfirmation", "SLCFallback", "SLCPriority1", "SLCPriority2", "SLCPriority3", "SLCOverride", "TurnDesires", "VisionTurnControl",
+    "DisableVTSCSmoothing", "CurveSensitivity", "TurnAggressiveness",
+    "EVTable", "GasRegenCmd", "LongPitch", "LowerVolt", "CrosstrekTorque", "CydiaTune", "DragonPilotTune", "FrogsGoMooTune", "LockDoors", "SNGHack",
+    "CustomTheme", "CustomColors", "CustomIcons", "CustomSignals", "CustomSounds", "GoatScream", "AlertVolumeControl", "DisengageVolume",
+    "EngageVolume", "PromptVolume", "PromptDistractedVolume", "RefuseVolume", "WarningSoftVolume", "WarningImmediateVolume", "CameraView",
+    "Compass", "CustomAlerts", "GreenLightAlert", "LeadDepartingAlert", "LoudBlindspotAlert", "SpeedLimitChangedAlert", "CustomUI", "AccelerationPath",
+    "AdjacentPath", "AdjacentPathMetrics", "BlindSpotPath", "FPSCounter", "LeadInfo", "UseSI", "PedalsOnUI", "RoadNameUI", "UseVienna", "DriverCamera",
+    "ModelUI", "DynamicPathWidth", "LaneLinesWidth", "PathEdgeWidth", "PathWidth", "RoadEdgesWidth", "UnlimitedLength", "QOLVisuals", "DriveStats",
+    "FullMap", "HideSpeed", "HideSpeedUI", "ShowSLCOffset", "WheelSpeed", "RandomEvents", "ScreenBrightness", "WheelIcon", "RotatingWheel",
+    "NumericalTemp", "Fahrenheit", "ShowCPU", "ShowGPU", "ShowIP", "ShowMemoryUsage", "ShowStorageLeft", "ShowStorageUsed", "Sidebar"
+  ]
+
+  params = Params()
+  toggle_values = {key: params.get(key).decode('utf-8') if params.get(key) is not None else "0" for key in all_keys}
+
+  return toggle_values
