@@ -316,6 +316,8 @@ void ui_update_frogpilot_params(UIState *s) {
   scene.road_edge_width = params.getInt("RoadEdgesWidth") * (scene.is_metric ? 1.0f : INCH_TO_CM) / 200.0f;
   scene.unlimited_road_ui_length = params.getBool("UnlimitedLength") && scene.model_ui;
 
+  scene.mute_dm = params.getBool("MuteDM") && params.getBool("FireTheBabysitter");
+
   bool quality_of_life_controls = params.getBool("QOLControls");
 
   bool quality_of_life_visuals = params.getBool("QOLVisuals");
