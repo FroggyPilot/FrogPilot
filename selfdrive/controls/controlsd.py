@@ -95,11 +95,13 @@ class Controls:
     self.mtsc_alerted = False
     self.openpilot_crashed = False
     self.random_event_triggered = False
+    self.frogpilot_variables.disable_reverse_cruise_increase = False
     self.stopped_for_light_previously = False
     self.vCruise69_alert_played = False
 
     self.previous_lead_distance = 0
     self.previous_speed_limit = 0
+    self.previous_v_cruise_cluster_kph = 0
     self.random_event_timer = 0
 
     ignore = self.sensor_packets + ['testJoystick']
@@ -736,6 +738,15 @@ class Controls:
 
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled
+
+    # Disable reverse cruise increase on long press for PCM vehicles
+    if self.frogpilot_variables.reverse_cruise_increase and self.CP.pcmCruise and self.sm.frame % 50 == 0:
+      if abs(self.v_cruise_helper.v_cruise_cluster_kph - self.previous_v_cruise_cluster_kph) > 5:
+        self.frogpilot_variables.disable_reverse_cruise_increase = True
+      else:
+        self.frogpilot_variables.disable_reverse_cruise_increase = False
+
+      self.previous_v_cruise_cluster_kph = self.v_cruise_helper.v_cruise_cluster_kph
 
     # Update Experimental Mode
     if self.frogpilot_variables.conditional_experimental_mode:
