@@ -237,6 +237,9 @@ static void update_state(UIState *s) {
       scene.gas_pressed = carState.getGasPressed() && scene.always_on_lateral_active;
       scene.standstill = carState.getStandstill() && carState.getGearShifter() != cereal::CarState::GearShifter::PARK;
     }
+    if (scene.rotating_wheel) {
+      scene.steering_angle_deg = carState.getSteeringAngleDeg();
+    }
   }
   if (sm.updated("controlsState")) {
     auto controlsState = sm["controlsState"].getControlsState();
@@ -346,6 +349,8 @@ void ui_update_frogpilot_params(UIState *s) {
   scene.full_map = params.getBool("FullMap") && quality_of_life_visuals;
   scene.hide_speed = params.getBool("HideSpeed") && quality_of_life_visuals;
   scene.hide_speed_ui = params.getBool("HideSpeedUI") && scene.hide_speed;
+
+  scene.rotating_wheel = params.getBool("RotatingWheel");
 }
 
 void UIState::updateStatus() {
