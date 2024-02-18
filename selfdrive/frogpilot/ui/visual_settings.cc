@@ -38,7 +38,7 @@ FrogPilotVisualsPanel::FrogPilotVisualsPanel(SettingsWindow *parent) : FrogPilot
     {"DriverCamera", "Driver Camera On Reverse", "Show the driver's camera feed when you shift to reverse.", "../assets/img_driver_face_static.png"},
 
     {"ModelUI", "Model UI", "Personalize how the model's visualizations appear on your screen.", "../assets/offroad/icon_calibration.png"},
-    {"DynamicPathWidth", "Dynamic Path Width", "Have the path width dynamically adjust based on the current engagement state of openpilot.", ""}, 
+    {"DynamicPathWidth", "Dynamic Path Width", "Have the path width dynamically adjust based on the current engagement state of openpilot.", ""},
     {"LaneLinesWidth", "Lane Lines", "Adjust the visual thickness of lane lines on your display.\n\nDefault matches the MUTCD average of 4 inches.", ""},
     {"PathEdgeWidth", "Path Edges", "Adjust the width of the path edges shown on your UI to represent different driving modes and statuses.\n\nDefault is 20% of the total path.\n\nBlue = Navigation\nLight Blue = Always On Lateral\nGreen = Default with 'FrogPilot Colors'\nLight Green = Default with stock colors\nOrange = Experimental Mode Active\nYellow = Conditional Overriden", ""},
     {"PathWidth", "Path Width", "Customize the width of the driving path shown on your UI.\n\nDefault matches the width of a 2019 Lexus ES 350.", ""},
@@ -214,7 +214,7 @@ FrogPilotVisualsPanel::FrogPilotVisualsPanel(SettingsWindow *parent) : FrogPilot
     QObject::connect(toggles[key], &ToggleControl::toggleFlipped, [this, key]() {
       if (started || key == "DriveStats") {
         if (FrogPilotConfirmationDialog::toggle("Reboot required to take effect.", "Reboot Now", this)) {
-          Hardware::reboot();
+          Hardware::soft_reboot();
         }
       }
     });

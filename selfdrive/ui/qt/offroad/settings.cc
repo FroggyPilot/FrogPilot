@@ -290,7 +290,7 @@ DevicePanel::DevicePanel(SettingsWindow *parent) : ListWidget(parent) {
     process.setWorkingDirectory("/data/openpilot/panda");
     process.start("/bin/sh", QStringList{"-c", "pkill -f boardd; PYTHONPATH=.. python -c \"from panda import Panda; Panda().flash()\""});
     process.waitForFinished();
-    Hardware::reboot();
+    Hardware::soft_reboot();
   });
   addItem(flashPandaBtn);
 

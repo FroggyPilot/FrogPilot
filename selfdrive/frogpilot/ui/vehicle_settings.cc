@@ -128,7 +128,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
       QObject::connect(static_cast<FrogPilotButtonsParamControl*>(toggle), &FrogPilotButtonsParamControl::buttonClicked, [this]() {
         if (started) {
           if (FrogPilotConfirmationDialog::toggle("Reboot required to take effect.", "Reboot Now", this)) {
-            Hardware::reboot();
+            Hardware::soft_reboot();
           }
         }
       });
@@ -154,7 +154,7 @@ FrogPilotVehiclesPanel::FrogPilotVehiclesPanel(SettingsWindow *parent) : FrogPil
     QObject::connect(toggles[key], &ToggleControl::toggleFlipped, [this]() {
       if (started) {
         if (FrogPilotConfirmationDialog::toggle("Reboot required to take effect.", "Reboot Now", this)) {
-          Hardware::reboot();
+          Hardware::soft_reboot();
         }
       }
     });
