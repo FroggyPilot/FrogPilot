@@ -258,6 +258,8 @@ class Controls:
 
     self.events.clear()
 
+    frogpilot_plan = self.sm['frogpilotPlan']
+
     # Show crash log event if openpilot crashed
     if os.path.isfile(os.path.join(sentry.CRASHES_DIR, 'error.txt')):
       self.events.add(EventName.openpilotCrashed)
@@ -353,7 +355,7 @@ class Controls:
     # Handle lane change
     if self.sm['modelV2'].meta.laneChangeState == LaneChangeState.preLaneChange:
       direction = self.sm['modelV2'].meta.laneChangeDirection
-      desired_lane = self.sm['frogpilotPlan'].laneWidthLeft if direction == LaneChangeDirection.left else self.sm['frogpilotPlan'].laneWidthRight
+      desired_lane = frogpilot_plan.laneWidthLeft if direction == LaneChangeDirection.left else frogpilot_plan.laneWidthRight
       lane_available = desired_lane >= self.lane_detection_width
 
       if (CS.leftBlindspot and direction == LaneChangeDirection.left) or \
@@ -504,29 +506,37 @@ class Controls:
         self.events.add(EventName.modeldLagging)
 
     # Green light alert
-    if self.green_light_alert and self.enabled:
-      stopped_for_light = self.sm['frogpilotPlan'].redLight and CS.standstill
+    if self.green_light_alert:
+      stopped_for_light = frogpilot_plan.redLight and CS.standstill
       green_light = not stopped_for_light and self.stopped_for_light_previously
       self.stopped_for_light_previously = stopped_for_light
 
-      if green_light and not CS.gasPressed and not self.sm['longitudinalPlan'].hasLead:
+      green_light &= not CS.gasPressed
+      green_light &= not self.sm['longitudinalPlan'].hasLead
+      green_light &= self.driving_gear
+
+      if green_light:
         self.events.add(EventName.greenLight)
 
     # Lead departing alert
-    if self.lead_departing_alert and self.driving_gear and self.sm.frame % 50 == 0 and self.enabled:
+    if self.lead_departing_alert and self.sm.frame % 50 == 0:
       lead = self.sm['radarState'].leadOne
       lead_distance = lead.dRel
-      lead_departing = lead_distance - self.previous_lead_distance > 0.5 and self.previous_lead_distance != 0
+      lead_departing = lead_distance - self.previous_lead_distance > 0.5 and self.previous_lead_distance != 0 and CS.standstill
       self.previous_lead_distance = lead_distance
 
-      if lead_departing and lead.vLead > 1 and not CS.gasPressed and CS.standstill:
+      lead_departing &= not CS.gasPressed
+      lead_departing &= lead.vLead > 1
+      lead_departing &= self.driving_gear
+
+      if lead_departing:
         self.events.add(EventName.leadDeparting)
 
     # MTSC speed change alert
     if self.map_turn_speed_controller:
-      mtsc_speed_change = CS.vEgo - self.sm['frogpilotPlan'].adjustedCruise
+      mtsc_speed_change = CS.vEgo - frogpilot_plan.adjustedCruise
 
-      if self.mtsc_limit > mtsc_speed_change > 1 and not self.sm['frogpilotPlan'].vtscControllingCurve:
+      if self.mtsc_limit > mtsc_speed_change > 1 and not frogpilot_plan.vtscControllingCurve:
         if not self.mtsc_alerted:
           self.events.add(EventName.mtscWarning)
         self.mtsc_alerted = True
@@ -535,7 +545,7 @@ class Controls:
 
     # Speed limit changed alert
     if self.speed_limit_alert or self.speed_limit_confirmation:
-      desired_speed_limit = self.sm['frogpilotPlan'].unconfirmedSlcSpeedLimit
+      desired_speed_limit = frogpilot_plan.unconfirmedSlcSpeedLimit
       speed_limit_changed = abs(desired_speed_limit - self.previous_speed_limit) > 1 and self.previous_speed_limit != 0
       self.previous_speed_limit = desired_speed_limit
 
@@ -726,6 +736,10 @@ class Controls:
     long_plan = self.sm['longitudinalPlan']
     model_v2 = self.sm['modelV2']
 
+    CC = car.CarControl.new_message()
+    CC.enabled = self.enabled
+
+    # FrogPilot functions
     frogpilot_plan = self.sm['frogpilotPlan']
 
     # Reset the Random Event flag
@@ -735,9 +749,6 @@ class Controls:
         self.random_event_triggered = False
         self.random_event_timer = 0
         self.params_memory.remove("CurrentRandomEvent")
-
-    CC = car.CarControl.new_message()
-    CC.enabled = self.enabled
 
     # Disable reverse cruise increase on long press for PCM vehicles
     if self.frogpilot_variables.reverse_cruise_increase and self.CP.pcmCruise and self.sm.frame % 50 == 0:

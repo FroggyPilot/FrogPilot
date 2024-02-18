@@ -358,7 +358,7 @@ def mtsc_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, met
     "MTS requesting a speed change of",
     f"{mtsc_speed_change_msg}",
     AlertStatus.normal, AlertSize.mid,
-    Priority.LOW, VisualAlert.none, AudibleAlert.prompt, 3.)
+    Priority.MID, VisualAlert.none, AudibleAlert.prompt, 3.)
 
 def no_lane_available_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
   lane_width = sm['frogpilotPlan'].laneWidthLeft if CS.leftBlinker else sm['frogpilotPlan'].laneWidthRight
