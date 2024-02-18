@@ -6,6 +6,8 @@ from openpilot.common.params import Params
 params = Params()
 params_memory = Params("/dev/shm/params")
 
+DEFAULT_MODEL = "los-angeles"
+
 # Acceleration profiles - Credit goes to the DragonPilot team!
                  # MPH = [0., 18,  36,  63,  94]
 A_CRUISE_MIN_BP_CUSTOM = [0., 8., 16., 28., 42.]
