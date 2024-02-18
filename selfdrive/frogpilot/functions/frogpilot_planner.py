@@ -12,7 +12,9 @@ from openpilot.selfdrive.frogpilot.functions.conditional_experimental_mode impor
 from openpilot.selfdrive.frogpilot.functions.map_turn_speed_controller import MapTurnSpeedController
 from openpilot.selfdrive.frogpilot.functions.speed_limit_controller import SpeedLimitController
 
+# VTSC variables
 MIN_TARGET_V = 5    # m/s
+TARGET_LAT_A = 1.9  # m/s^2
 
 class FrogPilotPlanner:
   def __init__(self, CP, params, params_memory):
@@ -31,6 +33,7 @@ class FrogPilotPlanner:
     self.road_curvature = 0
     self.slc_target = 0
     self.v_cruise = 0
+    self.vtsc_target = 0
 
     self.accel_limits = [A_CRUISE_MIN, get_max_accel(0)]
 
@@ -39,7 +42,7 @@ class FrogPilotPlanner:
   def update(self, carState, controlsState, modelData, mpc, sm, v_cruise, v_ego):
     enabled = controlsState.enabled
 
-    v_cruise_changed = (self.mtsc_target) + 1 < v_cruise  # Use stock acceleration profiles to handle MTSC more precisely
+    v_cruise_changed = (self.mtsc_target or self.vtsc_target) + 1 < v_cruise  # Use stock acceleration profiles to handle MTSC/VTSC more precisely
     if v_cruise_changed:
       self.accel_limits = [A_CRUISE_MIN, get_max_accel(v_ego)]
     else:
@@ -70,6 +73,7 @@ class FrogPilotPlanner:
       self.v_cruise = self.update_v_cruise(carState, controlsState, enabled, modelData, v_cruise, v_ego)
     else:
       self.mtsc_target = v_cruise
+      self.vtsc_target = v_cruise
       self.v_cruise = v_cruise
 
     # Lane detection
@@ -143,14 +147,35 @@ class FrogPilotPlanner:
       self.overriden_speed = 0
       self.slc_target = v_cruise
 
-    return min(self.mtsc_target, self.slc_target, v_cruise)
+    # Pfeiferj's Vision Turn Controller
+    if self.vision_turn_controller and enabled:
+      # Set the curve sensitivity
+      orientation_rate = np.array(np.abs(modelData.orientationRate.z)) * self.curve_sensitivity
+      velocity = np.array(modelData.velocity.x)
+
+      # Get the maximum lat accel from the model
+      max_pred_lat_acc = np.amax(orientation_rate * velocity)
+
+      # Get the maximum curve based on the current velocity
+      max_curve = max_pred_lat_acc / (v_ego**2)
+
+      # Set the target lateral acceleration
+      adjusted_target_lat_a = TARGET_LAT_A * self.turn_aggressiveness
+
+      # Get the target velocity for the maximum curve
+      self.vtsc_target = (adjusted_target_lat_a / max_curve)**0.5
+      self.vtsc_target = np.clip(self.vtsc_target, MIN_TARGET_V, v_cruise)
+    else:
+      self.vtsc_target = v_cruise
+
+    return min(self.mtsc_target, self.slc_target, self.vtsc_target, v_cruise)
 
   def publish(self, sm, pm, mpc):
     frogpilot_plan_send = messaging.new_message('frogpilotPlan')
     frogpilot_plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState'])
     frogpilotPlan = frogpilot_plan_send.frogpilotPlan
 
-    frogpilotPlan.adjustedCruise = float(self.mtsc_target * (CV.MS_TO_KPH if self.is_metric else CV.MS_TO_MPH))
+    frogpilotPlan.adjustedCruise = float(min(self.mtsc_target, self.vtsc_target) * (CV.MS_TO_KPH if self.is_metric else CV.MS_TO_MPH))
     frogpilotPlan.conditionalExperimental = self.cem.experimental_mode
 
     frogpilotPlan.desiredFollowDistance = mpc.safe_obstacle_distance - mpc.stopped_equivalence_factor
@@ -168,6 +193,8 @@ class FrogPilotPlanner:
     frogpilotPlan.slcSpeedLimit = float(self.slc_target)
     frogpilotPlan.slcSpeedLimitOffset = SpeedLimitController.offset
     frogpilotPlan.unconfirmedSlcSpeedLimit = SpeedLimitController.desired_speed_limit
+
+    frogpilotPlan.vtscControllingCurve = bool(self.mtsc_target > self.vtsc_target)
 
     pm.send('frogpilotPlan', frogpilot_plan_send)
 
@@ -215,3 +242,8 @@ class FrogPilotPlanner:
       self.speed_limit_confirmation = params.get_bool("SLCConfirmation")
       self.speed_limit_controller_override = params.get_int("SLCOverride")
       SpeedLimitController.update_frogpilot_params()
+
+    self.vision_turn_controller = params.get_bool("VisionTurnControl")
+    if self.vision_turn_controller:
+      self.curve_sensitivity = params.get_int("CurveSensitivity") / 100
+      self.turn_aggressiveness = params.get_int("TurnAggressiveness") / 100
