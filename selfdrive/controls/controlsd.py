@@ -87,6 +87,7 @@ class Controls:
     mute_dm = fire_the_babysitter and self.params.get_bool("MuteDM")
 
     self.driving_gear = False
+    self.mtsc_alerted = False
     self.stopped_for_light_previously = False
 
     self.previous_lead_distance = 0
@@ -477,6 +478,17 @@ class Controls:
 
       if lead_departing and lead.vLead > 1 and not CS.gasPressed and CS.standstill:
         self.events.add(EventName.leadDeparting)
+
+    # MTSC speed change alert
+    if self.map_turn_speed_controller:
+      mtsc_speed_change = CS.vEgo - self.sm['frogpilotPlan'].adjustedCruise
+
+      if self.mtsc_limit > mtsc_speed_change > 1 and not self.sm['frogpilotPlan'].vtscControllingCurve:
+        if not self.mtsc_alerted:
+          self.events.add(EventName.mtscWarning)
+        self.mtsc_alerted = True
+      else:
+        self.mtsc_alerted = False
 
   def data_sample(self):
     """Receive data from sockets and update carState"""
@@ -1011,6 +1023,10 @@ class Controls:
 
     longitudinal_tune = self.params.get_bool("LongitudinalTune")
     self.frogpilot_variables.sport_plus = self.params.get_int("AccelerationProfile") == 3 and longitudinal_tune
+
+    self.map_turn_speed_controller = self.params.get_bool("MTSCEnabled")
+    if self.map_turn_speed_controller:
+      self.mtsc_limit = self.params.get_float("MTSCLimit") * (CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS)
 
     quality_of_life = self.params.get_bool("QOLControls")
     self.frogpilot_variables.reverse_cruise_increase = self.params.get_bool("ReverseCruise") and quality_of_life

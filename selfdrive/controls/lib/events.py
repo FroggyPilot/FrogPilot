@@ -333,6 +333,15 @@ def joystick_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster,
   vals = f"Gas: {round(gb * 100.)}%, Steer: {round(steer * 100.)}%"
   return NormalPermanentAlert("Joystick Mode", vals)
 
+# FrogPilot alerts
+def mtsc_alert(CP: car.CarParams, CS: car.CarState, sm: messaging.SubMaster, metric: bool, soft_disable_time: int) -> Alert:
+  mtsc_speed_change = CS.vEgo - sm['frogpilotPlan'].adjustedCruise
+  mtsc_speed_change_msg = f"{round(mtsc_speed_change * CV.MS_TO_KPH)} kph" if metric else f"{round(mtsc_speed_change * CV.MS_TO_MPH)} mph"
+  return Alert(
+    "MTS requesting a speed change of",
+    f"{mtsc_speed_change_msg}",
+    AlertStatus.normal, AlertSize.mid,
+    Priority.LOW, VisualAlert.none, AudibleAlert.prompt, 3.)
 
 
 EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
@@ -989,6 +998,10 @@ EVENTS: Dict[int, Dict[str, Union[Alert, AlertCallbackType]]] = {
       "",
       AlertStatus.frogpilot, AlertSize.small,
       Priority.MID, VisualAlert.none, AudibleAlert.prompt, 3.),
+  },
+
+  EventName.mtscWarning: {
+    ET.PERMANENT: mtsc_alert,
   },
 }
 
