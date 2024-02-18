@@ -1111,6 +1111,7 @@ class Controls:
       self.mtsc_limit = self.params.get_float("MTSCLimit") * (CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS)
 
     self.frogpilot_variables.personalities_via_wheel = self.params.get_bool("PersonalitiesViaWheel") and self.params.get_bool("AdjustablePersonalities")
+    self.frogpilot_variables.sng_hack = self.params.get_bool("SNGHack")
 
     quality_of_life = self.params.get_bool("QOLControls")
     self.pause_lateral_on_signal = self.params.get_int("PauseLateralOnSignal") * (CV.KPH_TO_MS if self.is_metric else CV.MPH_TO_MS) if quality_of_life else 0
