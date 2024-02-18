@@ -160,6 +160,7 @@ private:
   void updateFrogPilotWidgets(QPainter &p);
 
   void drawLeadInfo(QPainter &p);
+  void drawSLCConfirmation(QPainter &p);
   void drawStatusBar(QPainter &p);
   void drawTurnSignals(QPainter &p);
 
@@ -185,16 +186,23 @@ private:
   bool leadInfo;
   bool mapOpen;
   bool pedalsOnUI;
+  bool rightHandDrive;
   bool roadNameUI;
   bool showDriverCamera;
+  bool showSLCOffset;
+  bool slcOverridden;
   bool turnSignalLeft;
   bool turnSignalRight;
+  bool useViennaSLCSign;
 
   float cruiseAdjustment;
   float distanceConversion;
   float laneWidthLeft;
   float laneWidthRight;
+  float slcSpeedLimit;
+  float slcSpeedLimitOffset;
   float speedConversion;
+  float unconfirmedSLCSpeedLimit;
 
   int bearingDeg;
   int cameraView;
