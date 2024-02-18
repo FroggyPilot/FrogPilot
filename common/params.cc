@@ -270,6 +270,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"EngageVolume", PERSISTENT},
     {"EVTable", PERSISTENT},
     {"ExperimentalModeActivation", PERSISTENT},
+    {"ExperimentalModeViaDistance", PERSISTENT},
     {"ExperimentalModeViaLKAS", PERSISTENT},
     {"ExperimentalModeViaScreen", PERSISTENT},
     {"Fahrenheit", PERSISTENT},

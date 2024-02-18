@@ -1110,7 +1110,9 @@ class Controls:
     self.frogpilot_variables.mute_door = fire_the_babysitter and self.params.get_bool("MuteDoor")
     self.frogpilot_variables.mute_seatbelt = fire_the_babysitter and self.params.get_bool("MuteSeatbelt")
 
-    self.frogpilot_variables.experimental_mode_via_lkas = self.params.get_bool("ExperimentalModeViaLKAS") and self.params.get_bool("ExperimentalModeActivation")
+    experimental_mode_activation = self.params.get_bool("ExperimentalModeActivation")
+    self.frogpilot_variables.experimental_mode_via_distance  = self.params.get_bool("ExperimentalModeViaDistance") and experimental_mode_activation
+    self.frogpilot_variables.experimental_mode_via_lkas = self.params.get_bool("ExperimentalModeViaLKAS") and experimental_mode_activation
 
     lateral_tune = self.params.get_bool("LateralTune")
     self.force_auto_tune = self.params.get_float("ForceAutoTune") and lateral_tune

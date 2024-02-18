@@ -108,6 +108,7 @@ def manager_init() -> None:
     ("EngageVolume", "100"),
     ("EVTable", "0" if FrogsGoMoo else "1"),
     ("ExperimentalModeActivation", "1"),
+    ("ExperimentalModeViaDistance", "0"),
     ("ExperimentalModeViaLKAS", "1" if FrogsGoMoo else "0"),
     ("ExperimentalModeViaScreen", "0" if FrogsGoMoo else "1"),
     ("Fahrenheit", "0"),

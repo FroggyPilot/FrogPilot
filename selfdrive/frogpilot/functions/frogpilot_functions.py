@@ -2,11 +2,12 @@ import numpy as np
 
 from openpilot.common.numpy_fast import interp
 from openpilot.common.params import Params
+from openpilot.selfdrive.controls.lib.drive_helpers import CRUISE_LONG_PRESS
+
+DEFAULT_MODEL = "los-angeles"
 
 params = Params()
 params_memory = Params("/dev/shm/params")
-
-DEFAULT_MODEL = "los-angeles"
 
 # Acceleration profiles - Credit goes to the DragonPilot team!
                  # MPH = [0., 18,  36,  63,  94]
@@ -67,6 +68,19 @@ class FrogPilotFunctions:
   @staticmethod
   def reset_personality_changed_param():
     params_memory.put_bool("PersonalityChangedViaUI", False)
+
+  @staticmethod
+  def long_press_distance_function(conditional_experimental_mode, distance_pressed_counter):
+    if distance_pressed_counter + 1 % CRUISE_LONG_PRESS == 0:
+      if conditional_experimental_mode:
+        # Set "CEStatus" to work with "Conditional Experimental Mode"
+        conditional_status = params_memory.get_int("CEStatus")
+        override_value = 0 if conditional_status in (1, 2, 3, 4) else 1 if conditional_status >= 5 else 2
+        params_memory.put_int("CEStatus", override_value)
+      else:
+        experimental_mode = params.get_bool("ExperimentalMode")
+        # Invert the value of "ExperimentalMode"
+        params.put_bool("ExperimentalMode", not experimental_mode)
 
   @staticmethod
   def lkas_button_function(conditional_experimental_mode):
